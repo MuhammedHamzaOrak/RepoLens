@@ -290,8 +290,7 @@ Possible `answer_status` values: `grounded`, `insufficient_context`, `indexing_i
 
 ```text
 repolens/
-├── README.md
-├── .gitignore
+├── README.md├── .gitignore
 ├── .env.example
 ├── docker-compose.yml                 # Optional, add only after MVP works
 ├── docs/

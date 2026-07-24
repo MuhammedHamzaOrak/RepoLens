@@ -1,0 +1,12 @@
+[
+  {
+    "question": "Example answerable question",
+    "expected_paths": ["src/example.py"],
+    "answerable": true
+  },
+  {
+    "question": "Example unanswerable question",
+    "expected_paths": [],
+    "answerable": false
+  }
+]
