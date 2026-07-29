@@ -29,10 +29,53 @@ button {
   cursor: pointer;
 }
 
-ul {
-  padding-left: 1.2rem;
+.project-list,
+.chunk-list {
+  padding: 0;
+  list-style: none;
 }
 
-li {
-  margin-bottom: 0.75rem;
+.project-card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+}
+
+.project-card__actions,
+.source-viewer__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.chunk-list {
+  margin-top: 0.75rem;
+}
+
+.chunk-list li {
+  margin-bottom: 0.5rem;
+}
+
+.chunk-list button {
+  width: 100%;
+  text-align: left;
+}
+
+.source-viewer {
+  padding: 1rem;
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  background: #030712;
+}
+
+.source-viewer__header {
+  align-items: flex-start;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+  background: #111827;
 }

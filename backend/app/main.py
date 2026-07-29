@@ -9,7 +9,7 @@ app = FastAPI(title="RepoLens API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.repolens_allowed_origin],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

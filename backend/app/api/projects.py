@@ -1,16 +1,37 @@
 import shutil
+import stat
 import uuid
 import zipfile
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 
 from app.core.config import settings
+from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.project_repository import ProjectRepository
+from app.schemas.project import (
+    IndexStartResponse,
+    ProjectCreated,
+    ProjectStatus,
+    ProjectSummary,
+)
+from app.schemas.source import SourceResponse, SourceSummaryResponse
+from app.services.indexing_service import (
+    IndexingService,
+    ProjectAlreadyIndexingError,
+    ProjectNotFoundError,
+)
+from app.services.ingestion_service import IngestionService
 
 router = APIRouter()
 project_repository = ProjectRepository()
+chunk_repository = ChunkRepository()
+indexing_service = IndexingService(
+    project_repository=project_repository,
+    chunk_repository=chunk_repository,
+    ingestion_service=IngestionService(),
+)
 
 EXCLUDED_DIRS = {
     ".git",
@@ -45,13 +66,16 @@ def _safe_extract_zip(source_path: Path, target_dir: Path) -> None:
                 if member.is_dir():
                     continue
 
+                if stat.S_ISLNK(member.external_attr >> 16):
+                    raise HTTPException(status_code=400, detail="Archive contains a symbolic link.")
+
                 normalized_name = member.filename.replace("\\", "/")
                 if any(part in EXCLUDED_DIRS for part in normalized_name.split("/")):
                     continue
 
                 safe_path = (target_dir / normalized_name).resolve()
                 target_root = target_dir.resolve()
-                if safe_path != target_root and target_root not in safe_path.parents:
+                if safe_path == target_root or target_root not in safe_path.parents:
                     raise HTTPException(status_code=400, detail="Archive contains a path that escapes the extraction directory.")
 
                 file_count += 1
@@ -71,8 +95,8 @@ def _safe_extract_zip(source_path: Path, target_dir: Path) -> None:
         raise HTTPException(status_code=400, detail="Uploaded file is not a valid ZIP archive.") from exc
 
 
-@router.post("/projects")
-def create_project(file: Annotated[UploadFile, File(...)]) -> dict[str, str]:
+@router.post("/projects", status_code=201, response_model=ProjectCreated)
+def create_project(file: Annotated[UploadFile, File(...)]) -> ProjectCreated:
     filename = file.filename or ""
     if not filename.lower().endswith(".zip"):
         raise HTTPException(status_code=400, detail="Only .zip uploads are supported.")
@@ -97,11 +121,105 @@ def create_project(file: Annotated[UploadFile, File(...)]) -> dict[str, str]:
         shutil.rmtree(target_dir, ignore_errors=True)
         raise
 
-    project_repository.create(project_id=project_id, name=filename, status="extracted")
+    project_repository.create(
+        project_id=project_id,
+        display_name=filename,
+        status="ready_to_index",
+    )
 
-    return {"project_id": project_id, "filename": filename}
+    return ProjectCreated(project_id=project_id, filename=filename)
 
 
-@router.get("/projects")
-def list_projects() -> list[dict[str, str]]:
+@router.get("/projects", response_model=list[ProjectSummary])
+def list_projects() -> list[dict]:
     return project_repository.list()
+
+
+@router.get("/projects/{project_id}", response_model=ProjectSummary)
+def get_project(project_id: str) -> dict:
+    project = project_repository.get(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    return project
+
+
+@router.get("/projects/{project_id}/status", response_model=ProjectStatus)
+def get_project_status(project_id: str) -> ProjectStatus:
+    project = project_repository.get(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found.")
+    return ProjectStatus(
+        id=project["id"],
+        status=project["status"],
+        file_count=project["file_count"],
+        chunk_count=project["chunk_count"],
+        error_message=project["error_message"],
+    )
+
+
+@router.post(
+    "/projects/{project_id}/index",
+    status_code=202,
+    response_model=IndexStartResponse,
+)
+def index_project(
+    project_id: str,
+    background_tasks: BackgroundTasks,
+) -> IndexStartResponse:
+    try:
+        indexing_service.prepare(project_id)
+    except ProjectNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Project not found.") from exc
+    except ProjectAlreadyIndexingError as exc:
+        raise HTTPException(status_code=409, detail="Project is already indexing.") from exc
+
+    background_tasks.add_task(indexing_service.run, project_id)
+    return IndexStartResponse(project_id=project_id, status="indexing")
+
+
+@router.get(
+    "/projects/{project_id}/chunks",
+    response_model=list[SourceSummaryResponse],
+)
+def list_source_chunks(project_id: str) -> list[SourceSummaryResponse]:
+    if project_repository.get(project_id) is None:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    return [
+        SourceSummaryResponse(
+            chunk_id=chunk["id"],
+            file_path=chunk["file_path"],
+            language=chunk["language"],
+            symbol_name=chunk["symbol_name"],
+            symbol_type=chunk["symbol_type"],
+            start_line=chunk["start_line"],
+            end_line=chunk["end_line"],
+            parse_status=chunk["parse_status"],
+        )
+        for chunk in chunk_repository.list_for_project(project_id)
+    ]
+
+
+@router.get(
+    "/projects/{project_id}/chunks/{chunk_id}",
+    response_model=SourceResponse,
+)
+def get_source_chunk(project_id: str, chunk_id: str) -> SourceResponse:
+    if project_repository.get(project_id) is None:
+        raise HTTPException(status_code=404, detail="Project not found.")
+
+    chunk = chunk_repository.get(project_id, chunk_id)
+    if chunk is None:
+        raise HTTPException(status_code=404, detail="Source chunk not found.")
+
+    return SourceResponse(
+        chunk_id=chunk["id"],
+        file_path=chunk["file_path"],
+        language=chunk["language"],
+        symbol_name=chunk["symbol_name"],
+        symbol_type=chunk["symbol_type"],
+        start_line=chunk["start_line"],
+        end_line=chunk["end_line"],
+        parse_status=chunk["parse_status"],
+        snippet=chunk["content"],
+    )

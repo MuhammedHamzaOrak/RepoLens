@@ -2,13 +2,20 @@
 
 RepoLens is a local-first RAG web application for exploring uploaded Python codebases.
 
-## Phase 0 status
+## Phase 2 status
 
-This repository now includes the initial Phase 0 backend and frontend bootstrap:
+Phase 2 is complete. The application now supports local project upload, parsing, chunk persistence, and source inspection before AI features are added:
 
-- FastAPI backend with a typed settings module and a `GET /api/health` endpoint
-- React + TypeScript + Vite frontend that calls the health endpoint and displays the JSON response
-- Shared environment template and repository ignore rules
+- FastAPI backend with typed settings, SQLite-backed project records, and a `GET /api/health` endpoint
+- Safe ZIP uploads through `POST /api/projects`, including size limits, Zip Slip protection, symbolic-link rejection, and excluded-directory handling
+- Project list, detail, and status endpoints
+- Supported-file discovery for Python, Markdown, and MDX with generated, oversized, binary, and secret-like file exclusion
+- Python AST chunking with function, class, method, module, and syntax-error fallback chunks
+- Markdown heading chunking with heading hierarchy and exact line ranges
+- SQLite-backed chunk storage with source metadata and placeholder embedding vectors
+- Indexing and source chunk API endpoints
+- React dashboard with upload, indexing, chunk listing, and a basic source viewer
+- Root and frontend environment templates, plus backend API, parser, and archive-security tests
 
 ## Local setup
 
@@ -28,6 +35,7 @@ pip install -r backend/requirements.txt
 
 ```powershell
 cd frontend
+Copy-Item .env.example .env
 npm install
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
@@ -42,11 +50,11 @@ curl http://127.0.0.1:8000/api/health
 
 - FastAPI backend as the source of truth for ingestion, retrieval, and local AI orchestration
 - React + TypeScript + Vite frontend
-- SQLite-backed local project metadata in later phases
+- SQLite-backed local project metadata
 - Foundry Local integration for embeddings and chat in later phases
 
 ## Notes
 
-- Phase 0 intentionally does not implement ZIP upload, SQLite, RAG, Foundry Local, authentication, Docker, or advanced UI.
+- Phase 2 intentionally does not generate embeddings or provide retrieval, chat, Foundry Local inference, authentication, Docker, or polished UI.
 - Uploads are treated as untrusted input.
 - Only Python and Markdown are supported in the MVP.

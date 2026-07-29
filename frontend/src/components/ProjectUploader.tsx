@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { uploadProject } from '../api/client'
 
 interface ProjectUploaderProps {
   onUploaded: () => void
@@ -19,20 +20,8 @@ export default function ProjectUploader({ onUploaded }: ProjectUploaderProps) {
     setIsUploading(true)
     setError(null)
 
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/projects', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const detail = await response.json().catch(() => null)
-        throw new Error(detail?.detail || 'Upload failed')
-      }
-
+      await uploadProject(file)
       setFile(null)
       onUploaded()
     } catch (uploadError) {
@@ -52,7 +41,7 @@ export default function ProjectUploader({ onUploaded }: ProjectUploaderProps) {
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
         />
         <button type="submit" disabled={isUploading}>
-          {isUploading ? 'Uploading…' : 'Yükle ve indeksle'}
+          {isUploading ? 'Uploading…' : 'Upload project'}
         </button>
       </form>
       {error ? <p role="alert">{error}</p> : null}
