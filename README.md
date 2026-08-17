@@ -2,9 +2,9 @@
 
 RepoLens is a local-first RAG web application for exploring uploaded Python codebases.
 
-## Phase 4 status
+## Phase 5 status
 
-Phase 4 is complete. The application now supports local project upload, parsing, semantic indexing, retrieval, source inspection, and grounded local chat:
+Phase 5 is complete. RepoLens now provides the complete local React flow from project upload to grounded answers and source inspection:
 
 - FastAPI backend with typed settings, SQLite-backed project records, and a `GET /api/health` endpoint
 - Safe ZIP uploads through `POST /api/projects`, including size limits, Zip Slip protection, symbolic-link rejection, and excluded-directory handling
@@ -23,7 +23,11 @@ Phase 4 is complete. The application now supports local project upload, parsing,
 - Backend-owned citations built from retrieved SQLite chunk metadata
 - Explicit `grounded`, `insufficient_context`, `indexing_incomplete`, and `error` answer states
 - No chat-model call when retrieval does not find relevant context
-- React dashboard with upload, indexing, chunk listing, and a basic source viewer
+- Responsive React dashboard with ZIP upload and selectable project cards
+- Selected-project details, live indexing status polling, statistics, and retry/error states
+- Grounded chat history with loading, empty, insufficient-context, and model-error states
+- Backend-owned citation cards that open the exact stored chunk in a modal source viewer
+- Desktop and mobile layouts with accessible form labels, dialogs, focus states, and reduced-motion support
 - Deterministic fake-provider tests for indexing, retrieval, and chat without model downloads
 - Root and frontend environment templates, plus backend API, parser, archive-security, provider, and retrieval tests
 
@@ -89,7 +93,7 @@ Answerable questions return `answer_status: "grounded"` and source objects whose
 
 ## Notes
 
-- Phase 4 intentionally does not provide the final chat UI, authentication, Docker, or polished UI. The React chat experience is Phase 5.
+- Phase 5 intentionally does not provide authentication, Docker, evaluation metrics, or final portfolio documentation. Evaluation and presentation work is Phase 6.
 - Projects indexed with Phase 2 placeholder vectors are marked `ready_to_index` and must be re-indexed once.
 - Uploads are treated as untrusted input.
 - Only Python and Markdown are supported in the MVP.

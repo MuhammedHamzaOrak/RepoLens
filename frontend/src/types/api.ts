@@ -39,3 +39,15 @@ export interface SourceResponse extends SourceSummary {
   score: number | null
   snippet: string
 }
+
+export type AnswerStatus =
+  | 'grounded'
+  | 'insufficient_context'
+  | 'indexing_incomplete'
+  | 'error'
+
+export interface ChatResponse {
+  answer: string
+  answer_status: AnswerStatus
+  sources: SourceResponse[]
+}
