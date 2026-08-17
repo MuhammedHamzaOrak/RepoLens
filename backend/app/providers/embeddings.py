@@ -1,13 +1,9 @@
-import logging
 import math
 import threading
 from collections.abc import Sequence
 from typing import Protocol
 
-from foundry_local_sdk import Configuration, FoundryLocalManager
-
-logger = logging.getLogger(__name__)
-_FOUNDRY_MANAGER_LOCK = threading.Lock()
+from app.providers.foundry_local import FoundryLocalRuntimeError, get_ready_model
 
 
 class EmbeddingProviderError(RuntimeError):
@@ -73,45 +69,15 @@ class FoundryLocalEmbeddingProvider:
                 return self._client
 
             try:
-                with _FOUNDRY_MANAGER_LOCK:
-                    if FoundryLocalManager.instance is None:
-                        FoundryLocalManager.initialize(Configuration(app_name="RepoLens"))
-
-                manager = FoundryLocalManager.instance
-                model = manager.catalog.get_model(self.model_alias)
-                if model is None:
-                    raise EmbeddingProviderError(
-                        f"Foundry Local model '{self.model_alias}' is unavailable."
-                    )
-
-                if not model.is_cached:
-                    logger.info(
-                        "Downloading Foundry Local embedding model %s",
-                        self.model_alias,
-                    )
-                    model.download(progress_callback=self._log_download_progress)
-                if not model.is_loaded:
-                    logger.info(
-                        "Loading Foundry Local embedding model %s",
-                        self.model_alias,
-                    )
-                    model.load()
-
+                model = get_ready_model(self.model_alias)
                 self._client = model.get_embedding_client()
                 return self._client
-            except EmbeddingProviderError:
-                raise
+            except FoundryLocalRuntimeError as exc:
+                raise EmbeddingProviderError(str(exc)) from exc
             except Exception as exc:
                 raise EmbeddingProviderError(
                     f"Foundry Local model '{self.model_alias}' could not be prepared."
                 ) from exc
-
-    def _log_download_progress(self, progress: float) -> None:
-        logger.info(
-            "Embedding model %s download progress: %.0f%%",
-            self.model_alias,
-            progress,
-        )
 
     def _validate_embeddings(
         self,

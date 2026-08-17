@@ -1,3 +1,9 @@
+from app.providers.chat import (
+    ChatMessage,
+    ChatProvider,
+    ChatProviderError,
+    FoundryLocalChatProvider,
+)
 from app.providers.embeddings import (
     EmbeddingProvider,
     EmbeddingProviderError,
@@ -5,7 +11,11 @@ from app.providers.embeddings import (
 )
 
 __all__ = [
+    "ChatMessage",
+    "ChatProvider",
+    "ChatProviderError",
     "EmbeddingProvider",
     "EmbeddingProviderError",
+    "FoundryLocalChatProvider",
     "FoundryLocalEmbeddingProvider",
 ]

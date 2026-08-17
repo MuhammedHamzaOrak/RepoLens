@@ -2,9 +2,9 @@
 
 RepoLens is a local-first RAG web application for exploring uploaded Python codebases.
 
-## Phase 3 status
+## Phase 4 status
 
-Phase 3 is complete. The application now supports local project upload, parsing, semantic indexing, retrieval, and source inspection before grounded chat is added:
+Phase 4 is complete. The application now supports local project upload, parsing, semantic indexing, retrieval, source inspection, and grounded local chat:
 
 - FastAPI backend with typed settings, SQLite-backed project records, and a `GET /api/health` endpoint
 - Safe ZIP uploads through `POST /api/projects`, including size limits, Zip Slip protection, symbolic-link rejection, and excluded-directory handling
@@ -17,8 +17,14 @@ Phase 3 is complete. The application now supports local project upload, parsing,
 - NumPy cosine-similarity ranking with configurable `top_k` and minimum similarity
 - Controlled `insufficient_context` search results when no chunk meets the threshold
 - Indexing, source chunk, and temporary semantic search API endpoints
+- Foundry Local chat completion behind a testable `ChatProvider` interface
+- A version-controlled grounded prompt that treats repository snippets as untrusted data
+- Grounded chat through `POST /api/projects/{project_id}/chat`
+- Backend-owned citations built from retrieved SQLite chunk metadata
+- Explicit `grounded`, `insufficient_context`, `indexing_incomplete`, and `error` answer states
+- No chat-model call when retrieval does not find relevant context
 - React dashboard with upload, indexing, chunk listing, and a basic source viewer
-- Deterministic fake-provider tests for indexing and retrieval without model downloads
+- Deterministic fake-provider tests for indexing, retrieval, and chat without model downloads
 - Root and frontend environment templates, plus backend API, parser, archive-security, provider, and retrieval tests
 
 ## Local setup
@@ -62,16 +68,28 @@ curl.exe -X POST http://127.0.0.1:8000/api/projects/<project-id>/search `
 
 The first real indexing request prepares the configured Foundry Local embedding model. If the model is not already cached, Foundry Local downloads it before generating vectors.
 
+### Verify grounded chat
+
+After indexing a project, ask a question through the Phase 4 endpoint:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:8000/api/projects/<project-id>/chat `
+  -H "Content-Type: application/json" `
+  -d '{"question":"Where is user registration implemented?","top_k":4}'
+```
+
+Answerable questions return `answer_status: "grounded"` and source objects whose `chunk_id` can be opened with `GET /api/projects/<project-id>/chunks/<chunk-id>`. If retrieval finds no relevant chunk, the API returns `insufficient_context` without calling the chat model.
+
 ## Project goals
 
 - FastAPI backend as the source of truth for ingestion, retrieval, and local AI orchestration
 - React + TypeScript + Vite frontend
 - SQLite-backed local project metadata
-- Foundry Local integration for embeddings, with grounded chat planned for Phase 4
+- Foundry Local integration for embeddings and grounded local chat
 
 ## Notes
 
-- Phase 3 intentionally does not provide grounded chat, authentication, Docker, or polished UI.
+- Phase 4 intentionally does not provide the final chat UI, authentication, Docker, or polished UI. The React chat experience is Phase 5.
 - Projects indexed with Phase 2 placeholder vectors are marked `ready_to_index` and must be re-indexed once.
 - Uploads are treated as untrusted input.
 - Only Python and Markdown are supported in the MVP.

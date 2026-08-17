@@ -7,13 +7,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 
-from app.core.config import settings
-from app.providers.embeddings import (
-    EmbeddingProviderError,
-    FoundryLocalEmbeddingProvider,
+from app.api.dependencies import (
+    chunk_repository,
+    indexing_service,
+    project_repository,
+    retrieval_service,
 )
-from app.repositories.chunk_repository import ChunkRepository
-from app.repositories.project_repository import ProjectRepository
+from app.core.config import settings
+from app.providers.embeddings import EmbeddingProviderError
 from app.schemas.project import (
     IndexStartResponse,
     ProjectCreated,
@@ -22,34 +23,14 @@ from app.schemas.project import (
 )
 from app.schemas.search import SearchRequest, SearchResponse
 from app.schemas.source import SourceResponse, SourceSummaryResponse
-from app.services.indexing_service import (
-    IndexingService,
-    ProjectAlreadyIndexingError,
-    ProjectNotFoundError,
-)
-from app.services.ingestion_service import IngestionService
+from app.services.indexing_service import ProjectAlreadyIndexingError, ProjectNotFoundError
 from app.services.retrieval_service import (
     InvalidStoredEmbeddingError,
     ProjectNotFoundError as RetrievalProjectNotFoundError,
     ProjectNotIndexedError,
-    RetrievalService,
 )
 
 router = APIRouter()
-project_repository = ProjectRepository()
-chunk_repository = ChunkRepository()
-embedding_provider = FoundryLocalEmbeddingProvider(settings.foundry_embedding_model)
-indexing_service = IndexingService(
-    project_repository=project_repository,
-    chunk_repository=chunk_repository,
-    ingestion_service=IngestionService(),
-    embedding_provider=embedding_provider,
-)
-retrieval_service = RetrievalService(
-    project_repository=project_repository,
-    chunk_repository=chunk_repository,
-    embedding_provider=embedding_provider,
-)
 
 EXCLUDED_DIRS = {
     ".git",

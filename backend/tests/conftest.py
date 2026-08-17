@@ -16,7 +16,18 @@ class FakeEmbeddingProvider:
 
     def embed_query(self, text: str) -> list[float]:
         lowered = text.lower()
-        if any(keyword in lowered for keyword in ("greet", "register", "user")):
+        if any(
+            keyword in lowered
+            for keyword in (
+                "greet",
+                "register",
+                "user",
+                "kullanıcı",
+                "kullanici",
+                "kayıt",
+                "kayit",
+            )
+        ):
             return [1.0, 0.0, 0.0]
         if any(keyword in lowered for keyword in ("readme", "documentation", "setup")):
             return [0.0, 1.0, 0.0]
@@ -31,9 +42,26 @@ class FakeEmbeddingProvider:
         return [0.0, 0.0, 1.0]
 
 
+class FakeChatProvider:
+    def __init__(self) -> None:
+        self.calls: list[list[dict[str, str]]] = []
+
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        self.calls.append([dict(message) for message in messages])
+        return "Kullanıcı kaydı register_user fonksiyonunda uygulanır."
+
+
+@pytest.fixture()
+def fake_chat_provider() -> FakeChatProvider:
+    return FakeChatProvider()
+
+
 @pytest.fixture(autouse=True)
-def isolated_data_dir(monkeypatch: pytest.MonkeyPatch) -> None:
-    from app.api import projects
+def isolated_data_dir(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_chat_provider: FakeChatProvider,
+) -> None:
+    from app.api import dependencies, projects
     from app.core.config import settings
     from app.repositories.database import init_db
 
@@ -50,6 +78,11 @@ def isolated_data_dir(monkeypatch: pytest.MonkeyPatch) -> None:
         projects.retrieval_service,
         "embedding_provider",
         fake_provider,
+    )
+    monkeypatch.setattr(
+        dependencies.rag_service,
+        "chat_provider",
+        fake_chat_provider,
     )
 
     init_db()
