@@ -1,6 +1,8 @@
 import hashlib
 import json
+import math
 import uuid
+from collections.abc import Sequence
 from datetime import datetime, timezone
 
 from app.parsers.base import ChunkCandidate
@@ -12,14 +14,28 @@ class ChunkRepository:
         self,
         project_id: str,
         chunks: list[ChunkCandidate],
+        embeddings: Sequence[Sequence[float]],
     ) -> list[str]:
+        if len(chunks) != len(embeddings):
+            raise ValueError("Each chunk must have exactly one embedding.")
+
         created_at = datetime.now(timezone.utc).isoformat()
         rows: list[tuple[object, ...]] = []
         chunk_ids: list[str] = []
+        embedding_dimensions: int | None = None
 
-        for chunk in chunks:
+        for chunk, embedding in zip(chunks, embeddings, strict=True):
             chunk_id = str(uuid.uuid4())
             chunk_ids.append(chunk_id)
+            vector = [float(value) for value in embedding]
+            if not vector or not all(math.isfinite(value) for value in vector):
+                raise ValueError("Chunk embeddings must contain finite numeric values.")
+            if not any(value != 0.0 for value in vector):
+                raise ValueError("Chunk embeddings must not be zero vectors.")
+            if embedding_dimensions is None:
+                embedding_dimensions = len(vector)
+            elif len(vector) != embedding_dimensions:
+                raise ValueError("Chunk embedding dimensions must be consistent.")
             rows.append(
                 (
                     chunk_id,
@@ -33,7 +49,7 @@ class ChunkRepository:
                     chunk.parse_status,
                     chunk.content,
                     hashlib.sha256(chunk.content.encode("utf-8")).hexdigest(),
-                    json.dumps([]),
+                    json.dumps(vector),
                     created_at,
                 )
             )

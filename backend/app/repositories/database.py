@@ -81,6 +81,26 @@ def init_db() -> None:
             ON chunks(project_id, file_path)
             """
         )
+
+        # Phase 2 stored placeholder `[]` vectors. Those projects must be
+        # re-indexed before Phase 3 semantic search can use them safely.
+        conn.execute(
+            """
+            UPDATE projects
+            SET status = 'ready_to_index',
+                indexed_at = NULL,
+                chunk_count = 0,
+                error_message = NULL
+            WHERE status = 'indexed'
+              AND EXISTS (
+                  SELECT 1
+                  FROM chunks
+                  WHERE chunks.project_id = projects.id
+                    AND chunks.embedding_json = '[]'
+              )
+            """
+        )
+        conn.execute("DELETE FROM chunks WHERE embedding_json = '[]'")
         conn.commit()
 
 

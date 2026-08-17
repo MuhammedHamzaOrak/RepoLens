@@ -2,7 +2,6 @@ import io
 import shutil
 import stat
 import sys
-import uuid
 import zipfile
 from pathlib import Path
 
@@ -16,17 +15,7 @@ if str(BACKEND_DIR) not in sys.path:
 from app.core.config import settings
 from app.main import app
 from app.repositories.chunk_repository import ChunkRepository
-
-
-@pytest.fixture(autouse=True)
-def isolated_data_dir(monkeypatch: pytest.MonkeyPatch) -> None:
-    from app.repositories.database import init_db
-
-    data_dir = BACKEND_DIR / ".test-data" / str(uuid.uuid4())
-    monkeypatch.setattr(settings, "repolens_data_dir", str(data_dir))
-    init_db()
-    yield
-    shutil.rmtree(data_dir, ignore_errors=True)
+from app.providers.embeddings import EmbeddingProviderError
 
 
 @pytest.fixture()
@@ -243,7 +232,7 @@ def test_index_project_persists_chunks_and_exposes_source(client: TestClient) ->
 
     chunks = ChunkRepository().list_for_project(project_id)
     assert len(chunks) == 3
-    assert all(chunk["embedding_json"] == "[]" for chunk in chunks)
+    assert all(chunk["embedding_json"] != "[]" for chunk in chunks)
 
     chunk_list_response = client.get(f"/api/projects/{project_id}/chunks")
     assert chunk_list_response.status_code == 200
@@ -307,3 +296,122 @@ def test_index_and_chunk_endpoints_reject_unknown_resources(
 
     response = client.get(f"/api/projects/{project_id}/chunks/missing")
     assert response.status_code == 404
+
+
+def test_search_returns_ranked_source_and_insufficient_context(
+    client: TestClient,
+) -> None:
+    archive_bytes = io.BytesIO()
+    with zipfile.ZipFile(archive_bytes, "w") as archive:
+        archive.writestr(
+            "src/users.py",
+            "def register_user(email):\n"
+            "    return {'email': email}\n",
+        )
+        archive.writestr(
+            "README.md",
+            "# Setup\n\n"
+            "Install the project dependencies.\n",
+        )
+
+    create_response = client.post(
+        "/api/projects",
+        files={"file": ("searchable.zip", archive_bytes.getvalue(), "application/zip")},
+    )
+    project_id = create_response.json()["project_id"]
+    assert client.post(f"/api/projects/{project_id}/index").status_code == 202
+
+    search_response = client.post(
+        f"/api/projects/{project_id}/search",
+        json={"query": "Where is user registration implemented?", "top_k": 1},
+    )
+
+    assert search_response.status_code == 200
+    body = search_response.json()
+    assert body["status"] == "ok"
+    assert len(body["results"]) == 1
+    assert body["results"][0]["file_path"] == "src/users.py"
+    assert body["results"][0]["symbol_name"] == "register_user"
+    assert body["results"][0]["score"] == pytest.approx(1.0)
+
+    unrelated_response = client.post(
+        f"/api/projects/{project_id}/search",
+        json={"query": "How is payment processing implemented?"},
+    )
+
+    assert unrelated_response.status_code == 200
+    assert unrelated_response.json() == {
+        "status": "insufficient_context",
+        "results": [],
+    }
+
+
+def test_search_rejects_unknown_unindexed_and_empty_queries(
+    client: TestClient,
+) -> None:
+    assert (
+        client.post(
+            "/api/projects/missing/search",
+            json={"query": "Where is registration?"},
+        ).status_code
+        == 404
+    )
+
+    archive_bytes = io.BytesIO()
+    with zipfile.ZipFile(archive_bytes, "w") as archive:
+        archive.writestr("app.py", "def run():\n    return True\n")
+    create_response = client.post(
+        "/api/projects",
+        files={"file": ("example.zip", archive_bytes.getvalue(), "application/zip")},
+    )
+    project_id = create_response.json()["project_id"]
+
+    assert (
+        client.post(
+            f"/api/projects/{project_id}/search",
+            json={"query": "Where is run?"},
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/projects/{project_id}/search",
+            json={"query": "   "},
+        ).status_code
+        == 422
+    )
+
+
+def test_embedding_failure_marks_project_failed(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.api import projects
+
+    class FailingEmbeddingProvider:
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            raise EmbeddingProviderError("test failure")
+
+        def embed_query(self, text: str) -> list[float]:
+            raise AssertionError("Query embedding is not expected.")
+
+    monkeypatch.setattr(
+        projects.indexing_service,
+        "embedding_provider",
+        FailingEmbeddingProvider(),
+    )
+
+    archive_bytes = io.BytesIO()
+    with zipfile.ZipFile(archive_bytes, "w") as archive:
+        archive.writestr("app.py", "def run():\n    return True\n")
+    create_response = client.post(
+        "/api/projects",
+        files={"file": ("failing.zip", archive_bytes.getvalue(), "application/zip")},
+    )
+    project_id = create_response.json()["project_id"]
+
+    assert client.post(f"/api/projects/{project_id}/index").status_code == 202
+    project = client.get(f"/api/projects/{project_id}").json()
+    assert project["status"] == "failed"
+    assert project["error_message"] == "Indexing failed. Check the backend logs for details."
+    assert ChunkRepository().list_for_project(project_id) == []

@@ -8,6 +8,10 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 
 from app.core.config import settings
+from app.providers.embeddings import (
+    EmbeddingProviderError,
+    FoundryLocalEmbeddingProvider,
+)
 from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.project_repository import ProjectRepository
 from app.schemas.project import (
@@ -16,6 +20,7 @@ from app.schemas.project import (
     ProjectStatus,
     ProjectSummary,
 )
+from app.schemas.search import SearchRequest, SearchResponse
 from app.schemas.source import SourceResponse, SourceSummaryResponse
 from app.services.indexing_service import (
     IndexingService,
@@ -23,14 +28,27 @@ from app.services.indexing_service import (
     ProjectNotFoundError,
 )
 from app.services.ingestion_service import IngestionService
+from app.services.retrieval_service import (
+    InvalidStoredEmbeddingError,
+    ProjectNotFoundError as RetrievalProjectNotFoundError,
+    ProjectNotIndexedError,
+    RetrievalService,
+)
 
 router = APIRouter()
 project_repository = ProjectRepository()
 chunk_repository = ChunkRepository()
+embedding_provider = FoundryLocalEmbeddingProvider(settings.foundry_embedding_model)
 indexing_service = IndexingService(
     project_repository=project_repository,
     chunk_repository=chunk_repository,
     ingestion_service=IngestionService(),
+    embedding_provider=embedding_provider,
+)
+retrieval_service = RetrievalService(
+    project_repository=project_repository,
+    chunk_repository=chunk_repository,
+    embedding_provider=embedding_provider,
 )
 
 EXCLUDED_DIRS = {
@@ -222,4 +240,57 @@ def get_source_chunk(project_id: str, chunk_id: str) -> SourceResponse:
         end_line=chunk["end_line"],
         parse_status=chunk["parse_status"],
         snippet=chunk["content"],
+    )
+
+
+@router.post(
+    "/projects/{project_id}/search",
+    response_model=SearchResponse,
+)
+def search_project(
+    project_id: str,
+    request: SearchRequest,
+) -> SearchResponse:
+    try:
+        retrieval = retrieval_service.search(
+            project_id=project_id,
+            query=request.query,
+            top_k=request.top_k,
+            min_similarity=request.min_similarity,
+        )
+    except RetrievalProjectNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Project not found.") from exc
+    except ProjectNotIndexedError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="Project must be indexed before it can be searched.",
+        ) from exc
+    except EmbeddingProviderError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="The local embedding model is unavailable.",
+        ) from exc
+    except InvalidStoredEmbeddingError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="The stored index is invalid. Re-index the project.",
+        ) from exc
+
+    return SearchResponse(
+        status=retrieval.status,
+        results=[
+            SourceResponse(
+                chunk_id=item.chunk["id"],
+                file_path=item.chunk["file_path"],
+                language=item.chunk["language"],
+                symbol_name=item.chunk["symbol_name"],
+                symbol_type=item.chunk["symbol_type"],
+                start_line=item.chunk["start_line"],
+                end_line=item.chunk["end_line"],
+                parse_status=item.chunk["parse_status"],
+                score=item.score,
+                snippet=item.chunk["content"],
+            )
+            for item in retrieval.results
+        ],
     )

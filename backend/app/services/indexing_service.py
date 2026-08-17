@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.parsers.base import ChunkCandidate
 from app.parsers.markdown_parser import MarkdownParser
 from app.parsers.python_parser import PythonParser
+from app.providers.embeddings import EmbeddingProvider
 from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.project_repository import ProjectRepository
 from app.services.ingestion_service import IngestionService, SourceDocument
@@ -26,10 +27,12 @@ class IndexingService:
         project_repository: ProjectRepository,
         chunk_repository: ChunkRepository,
         ingestion_service: IngestionService,
+        embedding_provider: EmbeddingProvider,
     ) -> None:
         self.project_repository = project_repository
         self.chunk_repository = chunk_repository
         self.ingestion_service = ingestion_service
+        self.embedding_provider = embedding_provider
         self.python_parser = PythonParser()
         self.markdown_parser = MarkdownParser()
 
@@ -52,7 +55,12 @@ class IndexingService:
                 for document in documents
                 for chunk in self._parse_document(document)
             ]
-            self.chunk_repository.replace_for_project(project_id, chunks)
+            embeddings = self._embed_chunks(chunks)
+            self.chunk_repository.replace_for_project(
+                project_id,
+                chunks,
+                embeddings,
+            )
             self.project_repository.mark_indexed(
                 project_id=project_id,
                 file_count=len(documents),
@@ -74,3 +82,29 @@ class IndexingService:
         if document.language == "python":
             return self.python_parser.parse(document.file_path, document.content)
         return self.markdown_parser.parse(document.file_path, document.content)
+
+    def _embed_chunks(self, chunks: list[ChunkCandidate]) -> list[list[float]]:
+        if not chunks:
+            return []
+
+        batch_size = max(1, settings.repolens_embedding_batch_size)
+        embeddings: list[list[float]] = []
+        for offset in range(0, len(chunks), batch_size):
+            batch = chunks[offset : offset + batch_size]
+            texts = [self._embedding_text(chunk) for chunk in batch]
+            batch_embeddings = self.embedding_provider.embed_documents(texts)
+            if len(batch_embeddings) != len(batch):
+                raise ValueError(
+                    "Embedding provider returned an unexpected number of vectors."
+                )
+            embeddings.extend(batch_embeddings)
+        return embeddings
+
+    def _embedding_text(self, chunk: ChunkCandidate) -> str:
+        metadata = [
+            f"File: {chunk.file_path}",
+            f"Type: {chunk.symbol_type}",
+        ]
+        if chunk.symbol_name:
+            metadata.append(f"Symbol: {chunk.symbol_name}")
+        return "\n".join([*metadata, "", chunk.content])

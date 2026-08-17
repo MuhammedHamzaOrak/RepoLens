@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,8 +12,9 @@ class Settings(BaseSettings):
     repolens_max_uncompressed_mb: int = 200
     repolens_max_files: int = 5000
     repolens_max_source_file_kb: int = 512
-    repolens_top_k: int = 4
-    repolens_min_similarity: float = 0.35
+    repolens_embedding_batch_size: int = Field(default=32, ge=1)
+    repolens_top_k: int = Field(default=4, ge=1, le=20)
+    repolens_min_similarity: float = Field(default=0.35, ge=-1.0, le=1.0)
     repolens_allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @property

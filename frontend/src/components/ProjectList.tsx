@@ -13,8 +13,8 @@ interface ProjectListProps {
   refreshKey: number
 }
 
-const POLL_ATTEMPTS = 40
-const POLL_INTERVAL_MS = 250
+const POLL_INTERVAL_MS = 1000
+const POLL_TIMEOUT_MS = 3 * 60 * 1000
 
 function delay(milliseconds: number) {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
@@ -54,7 +54,9 @@ export default function ProjectList({ refreshKey }: ProjectListProps) {
   }
 
   async function waitForIndex(projectId: string): Promise<ProjectRecord> {
-    for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt += 1) {
+    const deadline = Date.now() + POLL_TIMEOUT_MS
+
+    while (Date.now() < deadline) {
       const project = await getProject(projectId)
       replaceProject(project)
       if (project.status !== 'indexing') {
@@ -62,7 +64,9 @@ export default function ProjectList({ refreshKey }: ProjectListProps) {
       }
       await delay(POLL_INTERVAL_MS)
     }
-    throw new Error('Indexing is still running. Refresh the page to check again.')
+    throw new Error(
+      'Indexing is taking longer than expected. Refresh the page to check again.',
+    )
   }
 
   async function handleIndex(projectId: string) {
