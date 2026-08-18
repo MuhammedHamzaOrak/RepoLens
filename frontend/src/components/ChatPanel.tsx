@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { askProject } from '../api/client'
-import type { ChatResponse } from '../types/api'
+import type { ChatHistoryMessage, ChatResponse } from '../types/api'
 
 interface ChatPanelProps {
   projectId: string
@@ -13,6 +13,8 @@ interface Exchange {
   question: string
   response: ChatResponse
 }
+
+const MAX_HISTORY_MESSAGES = 6
 
 function AnswerContent({ answer }: { answer: string }) {
   return (
@@ -54,7 +56,15 @@ export default function ChatPanel({
     setIsAsking(true)
     setError(null)
     try {
-      const response = await askProject(projectId, normalizedQuestion)
+      const history: ChatHistoryMessage[] = exchanges
+        .flatMap((exchange): ChatHistoryMessage[] => [
+          { role: 'user', content: exchange.question },
+          ...(exchange.response.answer_status === 'grounded'
+            ? [{ role: 'assistant' as const, content: exchange.response.answer }]
+            : []),
+        ])
+        .slice(-MAX_HISTORY_MESSAGES)
+      const response = await askProject(projectId, normalizedQuestion, history)
       setExchanges((current) => [
         ...current,
         { id: Date.now(), question: normalizedQuestion, response },
@@ -82,7 +92,7 @@ export default function ChatPanel({
           <span className="chat-empty__icon" aria-hidden="true">?</span>
           <div>
             <strong>Kod hakkında ne öğrenmek istiyorsun?</strong>
-            <p>Örneğin: “Kullanıcı kaydı nerede uygulanıyor?”</p>
+            <p>Bir soru sor; ardından “Bunu hangi fonksiyon yapıyor?” gibi takip sorularıyla devam et.</p>
           </div>
         </div>
       ) : (
@@ -136,6 +146,7 @@ export default function ChatPanel({
           placeholder={disabled ? 'Soru sormak için önce projeyi indeksle.' : 'Kod tabanı hakkında bir soru yaz...'}
           disabled={disabled || isAsking}
           rows={2}
+          maxLength={2000}
         />
         <button
           className="button button--primary chat-submit"

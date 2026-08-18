@@ -17,6 +17,8 @@ chat_provider = FoundryLocalChatProvider(
     model_alias=settings.foundry_chat_model,
     max_tokens=settings.repolens_chat_max_tokens,
     temperature=settings.repolens_chat_temperature,
+    frequency_penalty=settings.repolens_chat_frequency_penalty,
+    random_seed=settings.repolens_chat_random_seed,
 )
 indexing_service = IndexingService(
     project_repository=project_repository,
@@ -37,4 +39,5 @@ rag_service = RagService(
     chat_provider=chat_provider,
     system_prompt=system_prompt,
     max_context_chars=settings.repolens_max_context_chars,
+    implementation_context_chunks=settings.repolens_implementation_context_chunks,
 )

@@ -1,12 +1,147 @@
 [
   {
-    "question": "Example answerable question",
-    "expected_paths": ["src/example.py"],
-    "answerable": true
+    "id": "A01",
+    "category": "answerable",
+    "question": "Where does the backend safely extract ZIP archives and reject path traversal?",
+    "expected_paths": ["backend/app/api/projects.py"],
+    "expected_symbols": ["_safe_extract_zip"]
   },
   {
-    "question": "Example unanswerable question",
-    "expected_paths": [],
-    "answerable": false
+    "id": "A02",
+    "category": "answerable",
+    "question": "Which endpoint function accepts an uploaded ZIP and creates a project record?",
+    "expected_paths": ["backend/app/api/projects.py"],
+    "expected_symbols": ["create_project"]
+  },
+  {
+    "id": "A03",
+    "category": "answerable",
+    "question": "How does project indexing discover files, create chunks, embeddings, and update project status?",
+    "expected_paths": ["backend/app/services/indexing_service.py"],
+    "expected_symbols": ["IndexingService.run"]
+  },
+  {
+    "id": "A04",
+    "category": "answerable",
+    "question": "Where are supported source files discovered while secret-like and binary files are excluded?",
+    "expected_paths": ["backend/app/services/ingestion_service.py"],
+    "expected_symbols": ["IngestionService.discover"]
+  },
+  {
+    "id": "A05",
+    "category": "answerable",
+    "question": "Which parser method uses Python AST to produce module, function, class, and method chunks?",
+    "expected_paths": ["backend/app/parsers/python_parser.py"],
+    "expected_symbols": ["PythonParser.parse"]
+  },
+  {
+    "id": "A06",
+    "category": "answerable",
+    "question": "Where is Markdown split into chunks using headings and heading hierarchy?",
+    "expected_paths": ["backend/app/parsers/markdown_parser.py"],
+    "expected_symbols": ["MarkdownParser.parse"]
+  },
+  {
+    "id": "A07",
+    "category": "answerable",
+    "question": "Which provider method generates document embeddings with Foundry Local?",
+    "expected_paths": ["backend/app/providers/embeddings.py"],
+    "expected_symbols": ["FoundryLocalEmbeddingProvider.embed_documents"]
+  },
+  {
+    "id": "A08",
+    "category": "answerable",
+    "question": "Where is cosine similarity calculated for two embedding vectors?",
+    "expected_paths": ["backend/app/services/retrieval_service.py"],
+    "expected_symbols": ["cosine_similarity"]
+  },
+  {
+    "id": "A09",
+    "category": "answerable",
+    "question": "Which method embeds a query, ranks stored chunks, and applies the minimum similarity threshold?",
+    "expected_paths": ["backend/app/services/retrieval_service.py"],
+    "expected_symbols": ["RetrievalService.search"]
+  },
+  {
+    "id": "A10",
+    "category": "answerable",
+    "question": "Where does RagService assemble retrieved chunks into prompt context before calling the chat provider?",
+    "expected_sources": [
+      {
+        "file_path": "backend/app/services/rag_service.py"
+      }
+    ]
+  },
+  {
+    "id": "A11",
+    "category": "answerable",
+    "question": "Which Foundry Local provider method sends messages to the local chat model?",
+    "expected_sources": [
+      {
+        "file_path": "backend/app/providers/chat.py",
+        "symbol_names": [
+          "FoundryLocalChatProvider",
+          "FoundryLocalChatProvider.complete"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A12",
+    "category": "answerable",
+    "question": "Which API endpoint returns grounded answers, answer status, and backend-owned source objects?",
+    "expected_paths": ["backend/app/api/chat.py"],
+    "expected_symbols": ["chat_with_project"]
+  },
+  {
+    "id": "U01",
+    "category": "unanswerable",
+    "question": "Where is spacecraft orbital thrust calibration implemented?",
+    "expected_paths": []
+  },
+  {
+    "id": "U02",
+    "category": "unanswerable",
+    "question": "Which module controls autonomous warehouse forklift route optimization?",
+    "expected_paths": []
+  },
+  {
+    "id": "U03",
+    "category": "unanswerable",
+    "question": "How does this repository perform retinal MRI image segmentation?",
+    "expected_paths": []
+  },
+  {
+    "id": "U04",
+    "category": "unanswerable",
+    "question": "Where are cryptocurrency wallet seed phrases generated?",
+    "expected_paths": []
+  },
+  {
+    "id": "E01",
+    "category": "edge",
+    "question": "",
+    "expected_http_status": 422
+  },
+  {
+    "id": "E02",
+    "category": "edge",
+    "question": "   ",
+    "expected_http_status": 422
+  },
+  {
+    "id": "E03",
+    "category": "edge",
+    "question": "Where is retrieval implemented?",
+    "top_k": 0,
+    "expected_http_status": 422
+  },
+  {
+    "id": "E04",
+    "category": "edge",
+    "question": "What does this project do?",
+    "project_state": "unindexed",
+    "expected_http_status": 200,
+    "expected_answer_status": "indexing_incomplete"
   }
 ]

@@ -25,10 +25,14 @@ class FoundryLocalChatProvider:
         model_alias: str,
         max_tokens: int,
         temperature: float,
+        frequency_penalty: float | None = None,
+        random_seed: int | None = None,
     ) -> None:
         self.model_alias = model_alias
         self.max_tokens = max_tokens
         self.temperature = temperature
+        self.frequency_penalty = frequency_penalty
+        self.random_seed = random_seed
         self._client: object | None = None
         self._client_lock = threading.Lock()
         self._inference_lock = threading.Lock()
@@ -45,10 +49,10 @@ class FoundryLocalChatProvider:
                 completion = client.complete_chat(list(messages))
             if not completion.choices:
                 raise ChatProviderError("Chat provider returned no choices.")
-            answer = completion.choices[0].message.content
-            if not isinstance(answer, str) or not answer.strip():
+            raw_answer = completion.choices[0].message.content
+            if not isinstance(raw_answer, str) or not raw_answer.strip():
                 raise ChatProviderError("Chat provider returned an empty answer.")
-            return answer.strip()
+            return raw_answer.strip()
         except ChatProviderError:
             raise
         except Exception as exc:
@@ -68,6 +72,8 @@ class FoundryLocalChatProvider:
                 client = model.get_chat_client()
                 client.settings.max_tokens = self.max_tokens
                 client.settings.temperature = self.temperature
+                client.settings.frequency_penalty = self.frequency_penalty
+                client.settings.random_seed = self.random_seed
                 self._client = client
                 return self._client
             except FoundryLocalRuntimeError as exc:

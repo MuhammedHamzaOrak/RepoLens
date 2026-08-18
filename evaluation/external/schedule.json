@@ -1,0 +1,43 @@
+[
+  {
+    "id": "SC-A01",
+    "category": "answerable",
+    "question": "Which scheduler method runs all jobs that are due?",
+    "expected_paths": ["schedule/__init__.py"],
+    "expected_symbols": ["Scheduler.run_pending"]
+  },
+  {
+    "id": "SC-A02",
+    "category": "answerable",
+    "question": "Where can every scheduled job be run immediately with an optional delay?",
+    "expected_paths": ["schedule/__init__.py"],
+    "expected_symbols": ["Scheduler.run_all"]
+  },
+  {
+    "id": "SC-A03",
+    "category": "answerable",
+    "question": "Which job method registers the callable and its arguments with the scheduler?",
+    "expected_paths": ["schedule/__init__.py"],
+    "expected_symbols": ["Job.do"]
+  },
+  {
+    "id": "SC-A04",
+    "category": "answerable",
+    "question": "Where is the next scheduled run time calculated?",
+    "expected_paths": ["schedule/__init__.py"],
+    "expected_symbols": ["Job._schedule_next_run"]
+  },
+  {
+    "id": "SC-A05",
+    "category": "answerable",
+    "question": "Which scheduler method removes jobs by an optional tag?",
+    "expected_paths": ["schedule/__init__.py"],
+    "expected_symbols": ["Scheduler.clear"]
+  },
+  {
+    "id": "SC-U01",
+    "category": "unanswerable",
+    "question": "Where does the project resize uploaded profile photos?",
+    "expected_paths": []
+  }
+]

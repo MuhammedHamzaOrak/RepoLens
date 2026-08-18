@@ -51,3 +51,8 @@ export interface ChatResponse {
   answer_status: AnswerStatus
   sources: SourceResponse[]
 }
+
+export interface ChatHistoryMessage {
+  role: 'user' | 'assistant'
+  content: string
+}

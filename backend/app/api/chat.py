@@ -29,6 +29,7 @@ def chat_with_project(
             project_id=project_id,
             question=request.question,
             top_k=request.top_k,
+            history=[item.model_dump() for item in request.history],
         )
     except ProjectNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Project not found.") from exc

@@ -16,7 +16,8 @@ htmlcov/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
-output/playwright/
+output/
+.playwright-cli/
 
 # Project data
 data/

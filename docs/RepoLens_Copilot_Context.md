@@ -130,14 +130,16 @@ Configuration must come from environment variables or a typed settings module, n
 
 ```env
 FOUNDRY_EMBEDDING_MODEL=qwen3-embedding-0.6b
-FOUNDRY_CHAT_MODEL=qwen2.5-0.5b
+FOUNDRY_CHAT_MODEL=qwen2.5-coder-1.5b
 REPOLENS_DATA_DIR=./data
 REPOLENS_MAX_UPLOAD_MB=25
 REPOLENS_TOP_K=4
-REPOLENS_MIN_SIMILARITY=0.35
+REPOLENS_MIN_SIMILARITY=0.50
+REPOLENS_FALLBACK_ACCEPT_SIMILARITY=0.435
+REPOLENS_FALLBACK_CONTEXT_SIMILARITY=0.37
 ```
 
-The default chat model should be small enough for development laptops. The model name must remain configurable because available models and hardware capacity vary. A stronger local model can be selected later without changing business logic.
+The default chat model should remain practical for development laptops while being reliable enough for code explanation. The model name must remain configurable because available models and hardware capacity vary. A stronger or smaller local model can be selected without changing business logic.
 
 ### RAG behavior requirements
 
@@ -237,9 +239,18 @@ Example chat request:
 ```json
 {
   "question": "Where is user registration implemented?",
-  "top_k": 4
+  "top_k": 4,
+  "history": [
+    {"role": "user", "content": "What does this project do?"},
+    {"role": "assistant", "content": "It manages local user records."}
+  ]
 }
 ```
+
+`history` is optional and contains at most six recent `user` or `assistant`
+messages. It is used only to resolve follow-up references; repository chunks
+retrieved for the current project remain the sole factual evidence and source
+of citations.
 
 Example chat response:
 

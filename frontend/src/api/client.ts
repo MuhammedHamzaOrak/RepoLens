@@ -1,4 +1,5 @@
 import type {
+  ChatHistoryMessage,
   ChatResponse,
   HealthResponse,
   IndexStartResponse,
@@ -72,13 +73,14 @@ export async function getSourceChunk(
 export async function askProject(
   projectId: string,
   question: string,
+  history: ChatHistoryMessage[] = [],
 ): Promise<ChatResponse> {
   const response = await fetch(
     `${API_BASE_URL}/projects/${encodeURIComponent(projectId)}/chat`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, history }),
     },
   )
   return readResponse(response, 'Yanıt oluşturulamadı.')

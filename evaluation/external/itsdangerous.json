@@ -1,0 +1,43 @@
+[
+  {
+    "id": "I-A01",
+    "category": "answerable",
+    "question": "Which serializer method serializes and signs an object into a value?",
+    "expected_paths": ["src/itsdangerous/serializer.py"],
+    "expected_symbols": ["Serializer.dumps"]
+  },
+  {
+    "id": "I-A02",
+    "category": "answerable",
+    "question": "Where is a signed value verified and its original payload returned?",
+    "expected_paths": ["src/itsdangerous/signer.py"],
+    "expected_symbols": ["Signer.unsign"]
+  },
+  {
+    "id": "I-A03",
+    "category": "answerable",
+    "question": "Which function decodes URL-safe base64 data and raises BadData for invalid input?",
+    "expected_paths": ["src/itsdangerous/encoding.py"],
+    "expected_symbols": ["base64_decode"]
+  },
+  {
+    "id": "I-A04",
+    "category": "answerable",
+    "question": "Where does timestamp signature validation enforce an optional maximum age?",
+    "expected_paths": ["src/itsdangerous/timed.py"],
+    "expected_symbols": ["TimestampSigner.unsign"]
+  },
+  {
+    "id": "I-A05",
+    "category": "answerable",
+    "question": "Which signer method derives the signing key from the configured secret and key derivation mode?",
+    "expected_paths": ["src/itsdangerous/signer.py"],
+    "expected_symbols": ["Signer.derive_key"]
+  },
+  {
+    "id": "I-U01",
+    "category": "unanswerable",
+    "question": "Where does this library send password reset emails through SMTP?",
+    "expected_paths": []
+  }
+]

@@ -1,0 +1,965 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-17T19:22:16.024525+00:00",
+  "project": {
+    "name": "RepoLens",
+    "source_url": null,
+    "source_commit": null,
+    "file_count": 46,
+    "chunk_count": 319,
+    "indexing_ms": 378699.09
+  },
+  "configuration": {
+    "top_k": 4,
+    "min_similarity": 0.5,
+    "embedding_model": "qwen3-embedding-0.6b",
+    "chat_model": "qwen2.5-coder-1.5b",
+    "embedding_batch_size": 32,
+    "chat_enabled": true
+  },
+  "metrics": {
+    "question_count": 20,
+    "answerable_count": 12,
+    "unanswerable_count": 4,
+    "edge_count": 4,
+    "retrieval_hits": 12,
+    "retrieval_hit_rate_percent": 100.0,
+    "citation_hits": 12,
+    "citation_evaluated_count": 12,
+    "citation_hit_rate_percent": 100.0,
+    "unsupported_successes": 4,
+    "unsupported_success_rate_percent": 100.0,
+    "edge_successes": 4,
+    "edge_success_rate_percent": 100.0,
+    "median_retrieval_ms": 834.1,
+    "median_chat_ms": 14015.86,
+    "passed_count": 20
+  },
+  "results": [
+    {
+      "id": "A01",
+      "category": "answerable",
+      "question": "Where does the backend safely extract ZIP archives and reject path traversal?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 740.28,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "_safe_extract_zip",
+          "start_line": 52,
+          "end_line": 94,
+          "score": 0.6861407486362898
+        },
+        {
+          "file_path": "backend/tests/test_projects_api.py",
+          "symbol_name": "test_create_project_rejects_path_traversal_in_archive",
+          "start_line": 124,
+          "end_line": 134,
+          "score": 0.6209407874769786
+        },
+        {
+          "file_path": "backend/scripts/run_evaluation.py",
+          "symbol_name": "build_archive",
+          "start_line": 71,
+          "end_line": 94,
+          "score": 0.5334930133136583
+        },
+        {
+          "file_path": "backend/scripts/phase4_e2e.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 11,
+          "score": 0.5567648936014675
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 20059.86,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "_safe_extract_zip",
+          "start_line": 52,
+          "end_line": 94,
+          "score": 0.6861407486362898
+        },
+        {
+          "file_path": "backend/tests/test_projects_api.py",
+          "symbol_name": "test_create_project_rejects_path_traversal_in_archive",
+          "start_line": 124,
+          "end_line": 134,
+          "score": 0.6209407874769786
+        },
+        {
+          "file_path": "backend/scripts/run_evaluation.py",
+          "symbol_name": "build_archive",
+          "start_line": 71,
+          "end_line": 94,
+          "score": 0.5334930133136583
+        }
+      ],
+      "answer_preview": "The backend safely extracts ZIP archives by checking each file's path against predefined exclusion rules and ensuring it does not escape the target directory. It uses `os.path` methods to normalize paths and compare them against the allowed directories. The code iterates over all files in the project directory, checks their attributes, and writes them to the archive if they meet certain criteria.",
+      "passed": true
+    },
+    {
+      "id": "A02",
+      "category": "answerable",
+      "question": "Which endpoint function accepts an uploaded ZIP and creates a project record?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 845.92,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "create_project",
+          "start_line": 97,
+          "end_line": 129,
+          "score": 0.7606824839777037
+        },
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 49,
+          "score": 0.6244595917101023
+        },
+        {
+          "file_path": "backend/scripts/run_evaluation.py",
+          "symbol_name": "create_project",
+          "start_line": 158,
+          "end_line": 164,
+          "score": 0.7329770912718078
+        },
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "index_project",
+          "start_line": 159,
+          "end_line": 176,
+          "score": 0.5671870509253486
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 15571.45,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "create_project",
+          "start_line": 97,
+          "end_line": 129,
+          "score": 0.7606824839777037
+        },
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 49,
+          "score": 0.6244595917101023
+        },
+        {
+          "file_path": "backend/scripts/run_evaluation.py",
+          "symbol_name": "create_project",
+          "start_line": 158,
+          "end_line": 164,
+          "score": 0.7329770912718078
+        }
+      ],
+      "answer_preview": "The endpoint function `create_project` in the `backend/app/api/projects.py` file accepts an uploaded ZIP file and creates a project record. The function uses FastAPI's `post` method to send a POST request to the `/api/projects` endpoint. It includes a file upload parameter named `file` with the content type set to `application/zip`.",
+      "passed": true
+    },
+    {
+      "id": "A03",
+      "category": "answerable",
+      "question": "How does project indexing discover files, create chunks, embeddings, and update project status?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 813.8,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/services/indexing_service.py",
+          "symbol_name": "IndexingService.run",
+          "start_line": 47,
+          "end_line": 79,
+          "score": 0.7570434108244939
+        },
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "index_project",
+          "start_line": 159,
+          "end_line": 176,
+          "score": 0.7551604627723277
+        },
+        {
+          "file_path": "backend/app/repositories/project_repository.py",
+          "symbol_name": "ProjectRepository.mark_indexed",
+          "start_line": 55,
+          "end_line": 74,
+          "score": 0.7224628850131957
+        },
+        {
+          "file_path": "backend/tests/test_projects_api.py",
+          "symbol_name": "test_index_project_persists_chunks_and_exposes_source",
+          "start_line": 198,
+          "end_line": 260,
+          "score": 0.777780965883372
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 15206.78,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/services/indexing_service.py",
+          "symbol_name": "IndexingService.run",
+          "start_line": 47,
+          "end_line": 79,
+          "score": 0.7570434108244939
+        },
+        {
+          "file_path": "backend/app/api/projects.py",
+          "symbol_name": "index_project",
+          "start_line": 159,
+          "end_line": 176,
+          "score": 0.7551604627723277
+        },
+        {
+          "file_path": "backend/app/repositories/project_repository.py",
+          "symbol_name": "ProjectRepository.mark_indexed",
+          "start_line": 55,
+          "end_line": 74,
+          "score": 0.7224628850131957
+        }
+      ],
+      "answer_preview": "The `IndexingService` class contains a method `run`, which is called by the `index_project` function in the `projects.py` file. The `run` method extracts root files from a specified project directory, discovers documents within these files, parses each document into chunks, embeds these chunks, and updates the project repository with the new information. The process involves several steps such as path manipulation (`Path`), list comprehension (`for document in documents for chunk in self._parse_",
+      "passed": true
+    },
+    {
+      "id": "A04",
+      "category": "answerable",
+      "question": "Where are supported source files discovered while secret-like and binary files are excluded?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 1134.89,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": "IngestionService.discover",
+          "start_line": 51,
+          "end_line": 77,
+          "score": 0.5960886966839801
+        },
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 40,
+          "score": 0.5754031372650302
+        },
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": "IngestionService._contains_likely_secret",
+          "start_line": 101,
+          "end_line": 102,
+          "score": 0.5207579435016334
+        },
+        {
+          "file_path": "backend/scripts/run_evaluation.py",
+          "symbol_name": "source_matches",
+          "start_line": 118,
+          "end_line": 135,
+          "score": 0.5122593428931397
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 14341.25,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": "IngestionService.discover",
+          "start_line": 51,
+          "end_line": 77,
+          "score": 0.5960886966839801
+        },
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 40,
+          "score": 0.5754031372650302
+        },
+        {
+          "file_path": "backend/app/services/ingestion_service.py",
+          "symbol_name": "IngestionService._contains_likely_secret",
+          "start_line": 101,
+          "end_line": 102,
+          "score": 0.5207579435016334
+        }
+      ],
+      "answer_preview": "The `IngestionService` class discovers source files by iterating over directories rooted at the specified `root` path. It filters out directories listed in `EXCLUDED_DIRECTORIES`, and it skips files whose extensions are not in `SUPPORTED_SUFFIXES`. For each remaining directory, it reads the contents of all files and checks if they contain any secret-like patterns defined in `SECRET_PATTERNS`.",
+      "passed": true
+    },
+    {
+      "id": "A05",
+      "category": "answerable",
+      "question": "Which parser method uses Python AST to produce module, function, class, and method chunks?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 839.59,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "docs/RepoLens_Copilot_Context.md",
+          "symbol_name": "RepoLens - Copilot Development Context > 2. Tech Stack & Architecture > Chunking rules > Python",
+          "start_line": 155,
+          "end_line": 165,
+          "score": 0.7197172425026042
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": "PythonParser.parse",
+          "start_line": 19,
+          "end_line": 43,
+          "score": 0.7063262466384129
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 5,
+          "score": 0.6964529482634949
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": "PythonParser._module_chunks",
+          "start_line": 45,
+          "end_line": 84,
+          "score": 0.6756734120487788
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 16238.16,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "docs/RepoLens_Copilot_Context.md",
+          "symbol_name": "RepoLens - Copilot Development Context > 2. Tech Stack & Architecture > Chunking rules > Python",
+          "start_line": 155,
+          "end_line": 165,
+          "score": 0.7197172425026042
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": "PythonParser.parse",
+          "start_line": 19,
+          "end_line": 43,
+          "score": 0.7063262466384129
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 5,
+          "score": 0.6964529482634949
+        },
+        {
+          "file_path": "backend/app/parsers/python_parser.py",
+          "symbol_name": "PythonParser._module_chunks",
+          "start_line": 45,
+          "end_line": 84,
+          "score": 0.6756734120487788
+        }
+      ],
+      "answer_preview": "The PythonParser class has a method named `_module_chunks` which uses Python AST to produce module, function, class, and method chunks. The method iterates over the body of the parsed Python source code, identifying function definitions, asynchronous function definitions, and class definitions. It then extracts the corresponding lines of code and creates `ChunkCandidate` objects for each type of node.",
+      "passed": true
+    },
+    {
+      "id": "A06",
+      "category": "answerable",
+      "question": "Where is Markdown split into chunks using headings and heading hierarchy?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 826.14,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": "MarkdownParser.parse",
+          "start_line": 17,
+          "end_line": 79,
+          "score": 0.6757791355361589
+        },
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 6,
+          "score": 0.6836198622283108
+        },
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": "MarkdownParser._find_headings",
+          "start_line": 81,
+          "end_line": 94,
+          "score": 0.639093278517758
+        },
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": "MarkdownParser._chunk",
+          "start_line": 96,
+          "end_line": 114,
+          "score": 0.6034186959606244
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 15160.71,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": "MarkdownParser.parse",
+          "start_line": 17,
+          "end_line": 79,
+          "score": 0.6757791355361589
+        },
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 6,
+          "score": 0.6836198622283108
+        },
+        {
+          "file_path": "backend/app/parsers/markdown_parser.py",
+          "symbol_name": "MarkdownParser._find_headings",
+          "start_line": 81,
+          "end_line": 94,
+          "score": 0.639093278517758
+        }
+      ],
+      "answer_preview": "Markdown is split into chunks using headings and a hierarchical structure. The `MarkdownParser` class has a method `_find_headings` that iterates through the lines of the markdown text. It uses a regular expression to match each line against the pattern defined by `HEADING_PATTERN`.",
+      "passed": true
+    },
+    {
+      "id": "A07",
+      "category": "answerable",
+      "question": "Which provider method generates document embeddings with Foundry Local?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 797.62,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "FoundryLocalEmbeddingProvider",
+          "start_line": 21,
+          "end_line": 21,
+          "score": 0.8123758682599314
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "FoundryLocalEmbeddingProvider.embed_documents",
+          "start_line": 28,
+          "end_line": 44,
+          "score": 0.7340762995186483
+        },
+        {
+          "file_path": "backend/tests/test_retrieval.py",
+          "symbol_name": "FixedQueryEmbeddingProvider.embed_documents",
+          "start_line": 17,
+          "end_line": 18,
+          "score": 0.7071006787565803
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_documents",
+          "start_line": 14,
+          "end_line": 15,
+          "score": 0.7069828246674246
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 12688.84,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "FoundryLocalEmbeddingProvider",
+          "start_line": 21,
+          "end_line": 21,
+          "score": 0.8123758682599314
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "FoundryLocalEmbeddingProvider.embed_documents",
+          "start_line": 28,
+          "end_line": 44,
+          "score": 0.7340762995186483
+        },
+        {
+          "file_path": "backend/tests/test_retrieval.py",
+          "symbol_name": "FixedQueryEmbeddingProvider.embed_documents",
+          "start_line": 17,
+          "end_line": 18,
+          "score": 0.7071006787565803
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_documents",
+          "start_line": 14,
+          "end_line": 15,
+          "score": 0.7069828246674246
+        }
+      ],
+      "answer_preview": "The `embed_documents` method in the `FoundryLocalEmbeddingProvider` class generates document embeddings using Foundry Local. The method takes a sequence of text strings as input and returns a list of lists of floats representing the embeddings. It uses the `_get_client()` method to obtain a client instance for interacting with Foundry Local.",
+      "passed": true
+    },
+    {
+      "id": "A08",
+      "category": "answerable",
+      "question": "Where is cosine similarity calculated for two embedding vectors?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 929.19,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "cosine_similarity",
+          "start_line": 66,
+          "end_line": 79,
+          "score": 0.6347827866648681
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_query",
+          "start_line": 17,
+          "end_line": 18,
+          "score": 0.5438235482507712
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_documents",
+          "start_line": 14,
+          "end_line": 15,
+          "score": 0.5325461535190057
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "FoundryLocalEmbeddingProvider",
+          "start_line": 21,
+          "end_line": 21,
+          "score": 0.5189557433416325
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 11498.14,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "cosine_similarity",
+          "start_line": 66,
+          "end_line": 79,
+          "score": 0.6347827866648681
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_query",
+          "start_line": 17,
+          "end_line": 18,
+          "score": 0.5438235482507712
+        },
+        {
+          "file_path": "backend/app/providers/embeddings.py",
+          "symbol_name": "EmbeddingProvider.embed_documents",
+          "start_line": 14,
+          "end_line": 15,
+          "score": 0.5325461535190057
+        }
+      ],
+      "answer_preview": "The cosine similarity between two embedding vectors is calculated by taking the dot product of the vectors and dividing it by the product of their magnitudes (norms). The dot product is computed using the `np.dot()` function, which multiplies corresponding elements of the input arrays and sums them up. The norms are obtained using the `np.linalg.norm()` function, which computes the Euclidean norm (square root of the sum of squares) of the array.",
+      "passed": true
+    },
+    {
+      "id": "A09",
+      "category": "answerable",
+      "question": "Which method embeds a query, ranks stored chunks, and applies the minimum similarity threshold?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 828.6,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService._score_chunks",
+          "start_line": 199,
+          "end_line": 214,
+          "score": 0.6598575773780224
+        },
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService._fallback_search",
+          "start_line": 149,
+          "end_line": 181,
+          "score": 0.6387163498285826
+        },
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService.search",
+          "start_line": 93,
+          "end_line": 147,
+          "score": 0.625071242412198
+        },
+        {
+          "file_path": "backend/tests/test_retrieval.py",
+          "symbol_name": "test_retrieval_ranks_results_and_applies_minimum_similarity",
+          "start_line": 67,
+          "end_line": 118,
+          "score": 0.6952036619063962
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 17324.06,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService._score_chunks",
+          "start_line": 199,
+          "end_line": 214,
+          "score": 0.6598575773780224
+        },
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService._fallback_search",
+          "start_line": 149,
+          "end_line": 181,
+          "score": 0.6387163498285826
+        },
+        {
+          "file_path": "backend/app/services/retrieval_service.py",
+          "symbol_name": "RetrievalService.search",
+          "start_line": 93,
+          "end_line": 147,
+          "score": 0.625071242412198
+        }
+      ],
+      "answer_preview": "The `embed_query` method in the `backend/app/services/retrieval_service.py` file is responsible for converting a query string into a numerical vector representation using the `embedding_provider`. This vector is then used by other methods like `_score_chunks` and `_fallback_search` to determine which chunks of text in the repository match the query based on their embeddings. The `embed_query` method uses the `embed_query` function from the `settings` module to generate the query embedding.",
+      "passed": true
+    },
+    {
+      "id": "A10",
+      "category": "answerable",
+      "question": "Where does RagService assemble retrieved chunks into prompt context before calling the chat provider?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 762.44,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService.__init__",
+          "start_line": 39,
+          "end_line": 51,
+          "score": 0.8045798419290512
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService",
+          "start_line": 38,
+          "end_line": 38,
+          "score": 0.7301398039318434
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagResult",
+          "start_line": 31,
+          "end_line": 35,
+          "score": 0.7031576969259609
+        },
+        {
+          "file_path": "backend/app/api/chat.py",
+          "symbol_name": "chat_with_project",
+          "start_line": 18,
+          "end_line": 74,
+          "score": 0.6958663276719793
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 6455.78,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService.__init__",
+          "start_line": 39,
+          "end_line": 51,
+          "score": 0.8045798419290512
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService",
+          "start_line": 38,
+          "end_line": 38,
+          "score": 0.7301398039318434
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagResult",
+          "start_line": 31,
+          "end_line": 35,
+          "score": 0.7031576969259609
+        }
+      ],
+      "answer_preview": "RagService.assemble_retrieved_chunks() calls the chat_provider's generate_chat_request() method with the assembled prompt context. The prompt context is constructed by concatenating the retrieved chunks' content.",
+      "passed": true
+    },
+    {
+      "id": "A11",
+      "category": "answerable",
+      "question": "Which Foundry Local provider method sends messages to the local chat model?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 756.84,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": "FoundryLocalChatProvider",
+          "start_line": 22,
+          "end_line": 22,
+          "score": 0.752762704665933
+        },
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 5,
+          "score": 0.718487605656941
+        },
+        {
+          "file_path": "backend/scripts/foundry_smoke_test.py",
+          "symbol_name": "main",
+          "start_line": 38,
+          "end_line": 61,
+          "score": 0.6692908465540656
+        },
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": "FoundryLocalChatProvider.__init__",
+          "start_line": 23,
+          "end_line": 38,
+          "score": 0.6586445505790088
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 13690.48,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": "FoundryLocalChatProvider",
+          "start_line": 22,
+          "end_line": 22,
+          "score": 0.752762704665933
+        },
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": null,
+          "start_line": 1,
+          "end_line": 5,
+          "score": 0.718487605656941
+        },
+        {
+          "file_path": "backend/scripts/foundry_smoke_test.py",
+          "symbol_name": "main",
+          "start_line": 38,
+          "end_line": 61,
+          "score": 0.6692908465540656
+        },
+        {
+          "file_path": "backend/app/providers/chat.py",
+          "symbol_name": "FoundryLocalChatProvider.__init__",
+          "start_line": 23,
+          "end_line": 38,
+          "score": 0.6586445505790088
+        }
+      ],
+      "answer_preview": "The `send_message` method of the `FoundryLocalChatProvider` class sends messages to the local chat model. This method is defined in the `__init__` method and takes two parameters: `messages`, which is a list of dictionaries representing the messages to be sent, and `model_alias`, which specifies the alias of the model to use. The method uses the `get_chat_client` method of the `chat_model` attribute to obtain a client for sending messages to the chat model.",
+      "passed": true
+    },
+    {
+      "id": "A12",
+      "category": "answerable",
+      "question": "Which API endpoint returns grounded answers, answer status, and backend-owned source objects?",
+      "retrieval_status": "ok",
+      "retrieval_ms": 825.47,
+      "retrieval_hit": true,
+      "retrieval_sources": [
+        {
+          "file_path": "backend/app/api/chat.py",
+          "symbol_name": "chat_with_project",
+          "start_line": 18,
+          "end_line": 74,
+          "score": 0.5687226428587585
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagResult",
+          "start_line": 31,
+          "end_line": 35,
+          "score": 0.6417326028952942
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService.answer",
+          "start_line": 53,
+          "end_line": 118,
+          "score": 0.6352713185448003
+        },
+        {
+          "file_path": "backend/app/schemas/chat.py",
+          "symbol_name": "ChatResponse",
+          "start_line": 21,
+          "end_line": 29,
+          "score": 0.6319832390887893
+        }
+      ],
+      "chat_http_status": 200,
+      "answer_status": "grounded",
+      "chat_ms": 19020.64,
+      "citation_hit": true,
+      "chat_sources": [
+        {
+          "file_path": "backend/app/api/chat.py",
+          "symbol_name": "chat_with_project",
+          "start_line": 18,
+          "end_line": 74,
+          "score": 0.5687226428587585
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagResult",
+          "start_line": 31,
+          "end_line": 35,
+          "score": 0.6417326028952942
+        },
+        {
+          "file_path": "backend/app/services/rag_service.py",
+          "symbol_name": "RagService.answer",
+          "start_line": 53,
+          "end_line": 118,
+          "score": 0.6352713185448003
+        }
+      ],
+      "answer_preview": "The API endpoint that returns grounded answers, answer status, and backend-owned source objects is `/projects/{project_id}/chat`. This endpoint uses the `chat_with_project` function from the `backend/app/api/chat.py` file. The function takes a project ID and a chat request, processes it using the `rag_service.answer` method, which retrieves relevant chunks of code from the repository and generates a response based on the provided question and context.",
+      "passed": true
+    },
+    {
+      "id": "U01",
+      "category": "unanswerable",
+      "question": "Where is spacecraft orbital thrust calibration implemented?",
+      "retrieval_status": "insufficient_context",
+      "retrieval_ms": 1714.62,
+      "retrieval_hit": null,
+      "retrieval_sources": [],
+      "chat_http_status": 200,
+      "answer_status": "insufficient_context",
+      "chat_ms": 1460.87,
+      "citation_hit": null,
+      "chat_sources": [],
+      "answer_preview": "Bu soruyu yanıtlamak için indekslenen proje kaynaklarında yeterli bağlam bulunamadı.",
+      "passed": true
+    },
+    {
+      "id": "U02",
+      "category": "unanswerable",
+      "question": "Which module controls autonomous warehouse forklift route optimization?",
+      "retrieval_status": "insufficient_context",
+      "retrieval_ms": 1513.8,
+      "retrieval_hit": null,
+      "retrieval_sources": [],
+      "chat_http_status": 200,
+      "answer_status": "insufficient_context",
+      "chat_ms": 1551.68,
+      "citation_hit": null,
+      "chat_sources": [],
+      "answer_preview": "Bu soruyu yanıtlamak için indekslenen proje kaynaklarında yeterli bağlam bulunamadı.",
+      "passed": true
+    },
+    {
+      "id": "U03",
+      "category": "unanswerable",
+      "question": "How does this repository perform retinal MRI image segmentation?",
+      "retrieval_status": "insufficient_context",
+      "retrieval_ms": 1526.62,
+      "retrieval_hit": null,
+      "retrieval_sources": [],
+      "chat_http_status": 200,
+      "answer_status": "insufficient_context",
+      "chat_ms": 1443.12,
+      "citation_hit": null,
+      "chat_sources": [],
+      "answer_preview": "Bu soruyu yanıtlamak için indekslenen proje kaynaklarında yeterli bağlam bulunamadı.",
+      "passed": true
+    },
+    {
+      "id": "U04",
+      "category": "unanswerable",
+      "question": "Where are cryptocurrency wallet seed phrases generated?",
+      "retrieval_status": "insufficient_context",
+      "retrieval_ms": 1545.82,
+      "retrieval_hit": null,
+      "retrieval_sources": [],
+      "chat_http_status": 200,
+      "answer_status": "insufficient_context",
+      "chat_ms": 1615.05,
+      "citation_hit": null,
+      "chat_sources": [],
+      "answer_preview": "Bu soruyu yanıtlamak için indekslenen proje kaynaklarında yeterli bağlam bulunamadı.",
+      "passed": true
+    },
+    {
+      "id": "E01",
+      "category": "edge",
+      "question": "",
+      "http_status": 422,
+      "answer_status": null,
+      "duration_ms": 11.57,
+      "passed": true
+    },
+    {
+      "id": "E02",
+      "category": "edge",
+      "question": "   ",
+      "http_status": 422,
+      "answer_status": null,
+      "duration_ms": 2.73,
+      "passed": true
+    },
+    {
+      "id": "E03",
+      "category": "edge",
+      "question": "Where is retrieval implemented?",
+      "http_status": 422,
+      "answer_status": null,
+      "duration_ms": 1.67,
+      "passed": true
+    },
+    {
+      "id": "E04",
+      "category": "edge",
+      "question": "What does this project do?",
+      "http_status": 200,
+      "answer_status": "indexing_incomplete",
+      "duration_ms": 2.92,
+      "passed": true
+    }
+  ]
+}

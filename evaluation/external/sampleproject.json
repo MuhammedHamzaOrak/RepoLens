@@ -1,0 +1,22 @@
+[
+  {
+    "id": "S-A01",
+    "category": "answerable",
+    "question": "Where is the function that adds one to a number?",
+    "expected_paths": ["src/sample/simple.py"],
+    "expected_symbols": ["add_one"]
+  },
+  {
+    "id": "S-A02",
+    "category": "answerable",
+    "question": "Which function is the sample command-line entry point?",
+    "expected_paths": ["src/sample/__init__.py"],
+    "expected_symbols": ["main"]
+  },
+  {
+    "id": "S-U01",
+    "category": "unanswerable",
+    "question": "Where does this package rotate database encryption keys?",
+    "expected_paths": []
+  }
+]
