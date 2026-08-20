@@ -1,61 +1,168 @@
 # RepoLens
 
-RepoLens is a local-first RAG web application for exploring an uploaded Python codebase. It safely extracts a ZIP archive, indexes Python and Markdown on the same device, answers repository questions with local Foundry models, and links every grounded answer to inspectable source chunks.
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=0B1721)
+![FastAPI](https://img.shields.io/badge/FastAPI-REST_API-009688?logo=fastapi&logoColor=white)
+![Foundry Local](https://img.shields.io/badge/AI-Foundry_Local-5C2D91?logo=microsoft&logoColor=white)
 
-## MVP status
+**Yerel çalışan, cevaplarını gerçek kaynak kodla destekleyen yapay zekâ tabanlı kod deposu asistanı.**
 
-Phase 6 is complete. The MVP includes the full ZIP upload → safe extraction → AST/Markdown chunking → local embeddings → SQLite → semantic retrieval → local chat → source viewer flow, plus a repeatable 20-question evaluation and real-repository stress tests.
+RepoLens, yabancı bir Python projesini daha hızlı anlamak için geliştirilmiş yerel öncelikli bir RAG uygulamasıdır. Kullanıcı bir ZIP dosyası yükler; RepoLens desteklenen kaynakları güvenli biçimde ayrıştırır, yerel olarak indeksler ve proje hakkındaki soruları dosya ve satır aralığı göstererek yanıtlar.
+
+Proje, **Microsoft AI Innovators Programı** kapsamında RAG mimarisi, yerel yapay zekâ modelleri ve kaynaklara dayalı cevap üretme yaklaşımını uçtan uca uygulamak amacıyla geliştirilmiştir.
+
+> **Durum:** Çalışan MVP tamamlandı. RepoLens küçük ve orta ölçekli Python/Markdown projelerinde yerel kullanım için tasarlanmıştır.
 
 <p align="center">
-  <img src="docs/assets/dashboard-mobile.png" alt="RepoLens mobile dashboard" width="280" />
+  <img src="docs/assets/dashboard-mobile.png" alt="RepoLens mobil kontrol paneli" width="280" />
   &nbsp;&nbsp;
-  <img src="docs/assets/source-viewer.png" alt="RepoLens source viewer" width="420" />
+  <img src="docs/assets/source-viewer.png" alt="RepoLens kaynak kod görüntüleyicisi" width="420" />
 </p>
 
-## Architecture
+## İçindekiler
+
+- [Neden RepoLens?](#neden-repolens)
+- [Öne çıkan özellikler](#öne-çıkan-özellikler)
+- [Nasıl çalışır?](#nasıl-çalışır)
+- [Mimari](#mimari)
+- [Teknoloji yığını](#teknoloji-yığını)
+- [Proje yapısı](#proje-yapısı)
+- [Hızlı başlangıç](#hızlı-başlangıç)
+- [Kullanım](#kullanım)
+- [Yapılandırma](#yapılandırma)
+- [API özeti](#api-özeti)
+- [Test ve değerlendirme](#test-ve-değerlendirme)
+- [Gizlilik ve güvenlik](#gizlilik-ve-güvenlik)
+- [Bilinen sınırlamalar](#bilinen-sınırlamalar)
+- [Yol haritası](#yol-haritası)
+
+## Neden RepoLens?
+
+Yeni bir kod deposuna başlarken doğru dosyayı, fonksiyonu veya sınıfı bulmak zaman alabilir. Bulut tabanlı yapay zekâ araçlarına özel kaynak kod göndermek de her proje için uygun olmayabilir.
+
+RepoLens bu probleme üç temel yaklaşımla çözüm üretir:
+
+1. **Yerel çalışma:** Kaynak kod ve model çıkarımı kullanıcının cihazında kalır.
+2. **İlgili bağlamı bulma:** Projenin tamamını modele vermek yerine soruyla ilişkili kod parçaları seçilir.
+3. **Doğrulanabilir cevap:** Her cevap gerçek dosya, sembol ve satır aralığıyla birlikte gösterilir.
+
+## Öne çıkan özellikler
+
+- Güvenli ZIP doğrulama ve çıkarma
+- Python AST tabanlı modül, fonksiyon, sınıf ve metot parçalama
+- Markdown ve MDX başlıklarına göre doküman parçalama
+- Yerel embedding üretimi ve SQLite üzerinde vektör saklama
+- Kosinüs benzerliği ve kod odaklı yeniden sıralama
+- Yerel Foundry modeliyle kaynaklara dayalı sohbet
+- Bağlamı koruyan takip soruları
+- Dosya, sembol, satır aralığı ve kod parçası içeren kaynak kartları
+- Yeterli kaynak bulunamadığında kontrollü `insufficient_context` cevabı
+- React tabanlı yükleme, indeksleme, sohbet ve kaynak görüntüleme arayüzü
+- Deterministik backend testleri ve tekrarlanabilir değerlendirme seti
+
+## Nasıl çalışır?
+
+```text
+ZIP yükleme
+    ↓
+Güvenli çıkarma ve dosya filtreleme
+    ↓
+Python AST / Markdown parçalama
+    ↓
+Yerel embedding üretimi ve SQLite'a kaydetme
+    ↓
+Soruyla en ilgili kod parçalarını bulma
+    ↓
+Yerel modelle cevap ve doğrulanabilir kaynaklar üretme
+```
+
+RAG (Retrieval-Augmented Generation) yaklaşımı sayesinde projenin tamamı her soruda sohbet modeline gönderilmez. Soru önce embedding'e dönüştürülür, en ilgili parçalar bulunur ve model yalnızca bu kaynakları kullanarak cevap oluşturur.
+
+## Mimari
 
 ```mermaid
 flowchart LR
-    U[Browser] -->|ZIP / questions| F[React + TypeScript]
-    F -->|REST| A[FastAPI]
-    A --> Z[Safe ZIP extraction]
-    Z --> P[Python AST and Markdown parsers]
-    P --> E[Foundry Local embeddings]
-    E --> D[(SQLite projects, chunks, vectors)]
-    F -->|Ask| A
-    A --> R[Cosine retrieval and code-aware reranking]
+    U[Tarayıcı] -->|ZIP / soru| F[React + TypeScript]
+    F -->|REST API| A[FastAPI]
+    A --> Z[Güvenli ZIP çıkarma]
+    Z --> P[Python AST ve Markdown ayrıştırıcıları]
+    P --> E[Foundry Local embedding modeli]
+    E --> D[(SQLite)]
+    F -->|Soru sor| A
+    A --> R[Benzerlik araması ve yeniden sıralama]
     D --> R
-    R -->|Relevant chunks only| C[Foundry Local chat]
+    R -->|İlgili kod parçaları| C[Foundry Local sohbet modeli]
     C --> A
-    A -->|Answer + backend-owned citations| F
+    A -->|Cevap ve kaynaklar| F
 ```
 
-The FastAPI backend is the source of truth. The frontend never reads source files, builds citations, or calls models directly. Uploaded code is treated as untrusted data and is never imported or executed.
+FastAPI backend'i sistemin doğruluk kaynağıdır. Frontend kaynak dosyaları doğrudan okumaz, modelleri çağırmaz ve kendi kaynak gösterimlerini üretmez. Yüklenen kod güvenilmeyen veri kabul edilir; içe aktarılmaz, bağımlılıkları kurulmaz ve hiçbir zaman çalıştırılmaz.
 
-## What is included
+## Teknoloji yığını
 
-- Safe ZIP validation with compressed/uncompressed size limits, file-count limits, Zip Slip protection, and symlink rejection
-- Python AST chunks for modules, functions, classes, and methods; line-based fallback for syntax errors
-- Markdown/MDX heading chunks with exact line ranges
-- Secret-like, dependency, generated, binary, and oversized file exclusion
-- Batched local embeddings and SQLite vector persistence
-- Cosine retrieval with a configurable relevance threshold and code-location reranking
-- Controlled `insufficient_context` responses that skip the chat model
-- Grounded local chat with bounded follow-up context and backend-owned file, symbol, line-range, score, and snippet citations
-- Responsive upload, project status, indexing, chat, source-card, and source-modal UI states
-- Deterministic provider tests plus real Foundry Local evaluation
+| Katman | Teknoloji | Görevi |
+|---|---|---|
+| Frontend | React 18, TypeScript, Vite | Dashboard, yükleme, sohbet ve kaynak görüntüleme |
+| Backend | Python 3.11+, FastAPI | API, iş akışları ve doğrulama |
+| Veritabanı | SQLite | Proje, parça, metadata ve embedding saklama |
+| Yerel yapay zekâ | Microsoft Foundry Local | Embedding ve sohbet modeli çalıştırma |
+| Embedding modeli | `qwen3-embedding-0.6b` | Doküman ve soru vektörleri |
+| Sohbet modeli | `qwen2.5-coder-1.5b` | Kod odaklı cevap üretme |
+| Kaynak arama | NumPy, kosinüs benzerliği | İlgili kod parçalarını sıralama |
+| Kod ayrıştırma | Python `ast`, özel Markdown parser | Kaynakları anlamlı parçalara ayırma |
+| Test | pytest, FastAPI TestClient | Birim, entegrasyon ve API testleri |
 
-## Local setup
+## Proje yapısı
 
-### Requirements
+```text
+RepoLens/
+├── backend/
+│   ├── app/
+│   │   ├── api/              # FastAPI endpoint'leri
+│   │   ├── core/             # Ayarlar, loglama ve hata yönetimi
+│   │   ├── parsers/          # Python AST ve Markdown ayrıştırıcıları
+│   │   ├── prompts/          # Sürümlenen grounded-chat prompt'u
+│   │   ├── providers/        # Foundry Local embedding/chat adaptörleri
+│   │   ├── repositories/     # SQLite veri erişim katmanı
+│   │   ├── schemas/          # Pydantic API modelleri
+│   │   ├── services/         # İndeksleme, retrieval ve RAG iş akışları
+│   │   └── main.py           # FastAPI uygulama girişi
+│   ├── scripts/              # Smoke test ve değerlendirme komutları
+│   └── tests/                # Backend testleri
+├── frontend/
+│   ├── src/
+│   │   ├── api/              # Tip güvenli backend istemcisi
+│   │   ├── components/       # Dashboard, sohbet ve kaynak bileşenleri
+│   │   ├── styles/           # Uygulama stilleri
+│   │   └── types/            # TypeScript API tipleri
+│   └── package.json
+├── docs/                     # Mimari, değerlendirme ve demo belgeleri
+├── evaluation/               # Sorular, dış proje senaryoları ve sonuçlar
+├── .env.example              # Backend örnek yapılandırması
+└── README.md
+```
 
-- Python 3.11 or newer
-- Node.js 18 or newer
-- Microsoft Foundry Local support on the machine; configured models are downloaded on first use if they are not cached. The default chat model is `qwen2.5-coder-1.5b` (about 1.8 GB).
+Çalışma sırasında oluşturulan ZIP'ler, çıkarılan projeler, model verileri ve SQLite dosyası `data/` altında tutulur. Bu dizin Git tarafından takip edilmez.
 
-### Backend
+## Hızlı başlangıç
 
-Run these commands from the repository root in PowerShell:
+### Gereksinimler
+
+- Python 3.11 veya üzeri
+- Node.js 18 veya üzeri
+- Microsoft Foundry Local'ın kurulu ve çalışabilir olması
+- Windows PowerShell
+
+Foundry Local kurulumu için [Microsoft'un resmi başlangıç rehberini](https://learn.microsoft.com/en-us/windows/ai/foundry-local/get-started) kullanabilirsiniz.
+
+### 1. Repoyu klonlayın
+
+```powershell
+git clone https://github.com/MuhammedHamzaOrak/RepoLens.git
+Set-Location RepoLens
+```
+
+### 2. Backend'i başlatın
 
 ```powershell
 python -m venv .venv
@@ -66,11 +173,11 @@ Copy-Item .env.example .env
 python -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
 ```
 
-Check `http://127.0.0.1:8000/api/health` after startup. The first indexing request or chat question can take longer while Foundry Local prepares or downloads the configured model.
+Sağlık kontrolü: `http://127.0.0.1:8000/api/health`
 
-### Frontend
+### 3. Frontend'i başlatın
 
-Open a second PowerShell window:
+İkinci bir PowerShell penceresinde RepoLens kök dizinine gidin ve ardından:
 
 ```powershell
 Set-Location frontend
@@ -79,51 +186,130 @@ npm install
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Open `http://127.0.0.1:5173`, upload a ZIP containing Python or Markdown files, wait for indexing, then ask a repository question and open one of its source cards.
+Uygulama: `http://127.0.0.1:5173`
 
-## Verification
+> İlk indeksleme veya sohbet isteği sırasında Foundry Local modeli indirilebilir ya da belleğe yüklenebilir. Bu nedenle ilk işlem sonraki işlemlerden daha uzun sürebilir.
+
+## Kullanım
+
+1. `.py`, `.md` veya `.mdx` dosyaları içeren bir ZIP seçin.
+2. **Projeyi yükle** düğmesine basın.
+3. Proje kartından indekslemeyi başlatın ve durumun **Hazır** olmasını bekleyin.
+4. Proje hakkında bir soru sorun.
+5. Cevabın altındaki kaynak kartına tıklayarak ilgili kodu ve satır aralığını inceleyin.
+
+Örnek sorular:
+
+- “Bu proje ne işe yarıyor ve hangi özellikleri sunuyor?”
+- “Toplama işlemi kodda nasıl gerçekleştiriliyor?”
+- “Bu sınıfın sorumluluğu nedir?”
+- “Kullanıcı kaydı hangi dosyada uygulanmış?”
+
+## Yapılandırma
+
+Backend ayarları depo kökündeki `.env`, frontend API adresi ise `frontend/.env` dosyasından okunur. Başlangıç için örnek dosyaları kopyalamak yeterlidir.
+
+| Değişken | Varsayılan | Açıklama |
+|---|---:|---|
+| `FOUNDRY_EMBEDDING_MODEL` | `qwen3-embedding-0.6b` | Yerel embedding modeli |
+| `FOUNDRY_CHAT_MODEL` | `qwen2.5-coder-1.5b` | Yerel sohbet modeli |
+| `REPOLENS_DATA_DIR` | `./data` | Yerel proje ve SQLite dizini |
+| `REPOLENS_MAX_UPLOAD_MB` | `25` | En büyük sıkıştırılmış ZIP boyutu |
+| `REPOLENS_MAX_UNCOMPRESSED_MB` | `200` | En büyük açılmış arşiv boyutu |
+| `REPOLENS_MAX_FILES` | `5000` | Arşivde kabul edilen en fazla dosya |
+| `REPOLENS_TOP_K` | `4` | Soru başına alınacak kaynak sayısı |
+| `REPOLENS_ALLOWED_ORIGINS` | localhost adresleri | İzin verilen frontend origin'leri |
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api` | Frontend'in bağlanacağı API adresi |
+
+Tüm seçenekler ve eşikler için [`.env.example`](.env.example) dosyasına bakın.
+
+## API özeti
+
+| Metot | Endpoint | Açıklama |
+|---|---|---|
+| `GET` | `/api/health` | Backend ve servis durumunu döndürür |
+| `POST` | `/api/projects` | ZIP yükleyerek proje oluşturur |
+| `GET` | `/api/projects` | Yerel projeleri listeler |
+| `GET` | `/api/projects/{project_id}` | Proje bilgisini döndürür |
+| `GET` | `/api/projects/{project_id}/status` | İndeksleme durumunu döndürür |
+| `POST` | `/api/projects/{project_id}/index` | İndekslemeyi başlatır veya tekrarlar |
+| `GET` | `/api/projects/{project_id}/chunks` | İndekslenen kaynakları listeler |
+| `GET` | `/api/projects/{project_id}/chunks/{chunk_id}` | Bir kaynak parçasını açar |
+| `POST` | `/api/projects/{project_id}/search` | Anlamsal arama yapar |
+| `POST` | `/api/projects/{project_id}/chat` | Proje hakkında kaynaklı cevap üretir |
+
+FastAPI'nin etkileşimli API arayüzüne backend çalışırken `http://127.0.0.1:8000/docs` adresinden ulaşabilirsiniz.
+
+## Test ve değerlendirme
+
+### Backend testleri
 
 ```powershell
 Set-Location backend
 ..\.venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+```
 
-Set-Location ..\frontend
+### Frontend üretim derlemesi
+
+```powershell
+Set-Location frontend
 npm run build
+```
 
-Set-Location ..
+### RAG değerlendirmesi
+
+```powershell
 .\.venv\Scripts\python.exe backend\scripts\run_evaluation.py
 ```
 
-The recorded Phase 6 run indexed 46 supported files into 319 chunks. It achieved 100% retrieval hit rate (12/12), 100% citation hit rate (12/12), 100% unsupported-question handling (4/4), and 100% edge-case handling (4/4). Median retrieval time was 834 ms and median chat time was 14.02 seconds on the tested CPU Foundry provider. See [evaluation methodology and real-repository results](docs/evaluation.md) and the [raw result](evaluation/results/latest.json).
+Kaydedilen değerlendirmede 46 desteklenen dosya 319 parçaya dönüştürüldü:
 
-## Privacy and data
+| Ölçüm | Sonuç |
+|---|---:|
+| Kaynak bulma başarısı | %100 (12/12) |
+| Doğru kaynak gösterme | %100 (12/12) |
+| Cevaplanamayan soruları yönetme | %100 (4/4) |
+| Sınır durumlarını yönetme | %100 (4/4) |
+| Medyan kaynak arama süresi | 834 ms |
+| Medyan sohbet süresi | 14,02 sn |
 
-- Source archives, extracted files, SQLite records, embeddings, prompts, and inference remain on the local machine.
-- No cloud LLM or hosted vector database is used. Initial model downloads may require internet access; cached models work offline afterward.
-- Data is stored under `REPOLENS_DATA_DIR` (`./data` by default). The MVP has no delete button, so remove that local directory manually when its projects are no longer needed.
-- RepoLens has no authentication. Bind it to localhost and do not expose the development server to an untrusted network.
+Sonuçlar test edilen CPU ve Foundry sağlayıcısına aittir; farklı donanım ve modellerde değişebilir. Ayrıntılar için [değerlendirme raporuna](docs/evaluation.md) ve [ham sonuçlara](evaluation/results/latest.json) bakın.
 
-## Known limitations
+## Gizlilik ve güvenlik
 
-- Only `.py`, `.md`, and `.mdx` files are indexed. JavaScript, TypeScript, RST, notebooks, and other languages are skipped.
-- Python is parsed statically. RepoLens does not resolve runtime dispatch, execute code, install dependencies, or build an import graph.
-- Files larger than 512 KB are skipped by default; upload, uncompressed-size, and file-count limits are configurable.
-- SQLite vectors are scanned in memory with NumPy. This is appropriate for small repositories, not large monorepos.
-- CPU indexing can take several minutes even for a few hundred chunks. A tested 128-chunk embedding batch was unstable; the conservative default remains 32.
-- Retrieval quality depends on the configured embedding model and thresholds. The default code-focused 1.5B chat model is more reliable than the earlier 0.5B default but can still phrase an answer poorly, so citations should be inspected.
-- Re-indexing currently regenerates all chunks and embeddings; there is no content-hash cache or incremental update.
-- There is no project deletion, authentication, multi-project search, background worker queue, or packaged desktop/Docker release.
+- Kaynak arşivleri, çıkarılan dosyalar, embedding'ler, prompt'lar ve SQLite kayıtları yerel cihazda kalır.
+- Bulut LLM'i veya harici vektör veritabanı kullanılmaz.
+- ZIP yolları doğrulanır; Zip Slip ve sembolik bağlantı girişimleri reddedilir.
+- Gizli bilgi içerebilecek, ikili, bağımlılık ve büyük dosyalar indekslenmez.
+- Yüklenen kod içe aktarılmaz veya çalıştırılmaz.
+- RepoLens'te kimlik doğrulama yoktur. Uygulamayı yalnızca localhost üzerinde çalıştırın ve güvenilmeyen bir ağa açmayın.
+- MVP'de proje silme arayüzü bulunmadığından yerel veriler gerektiğinde `REPOLENS_DATA_DIR` altından manuel olarak kaldırılmalıdır.
 
-## Roadmap
+## Bilinen sınırlamalar
 
-1. Additional language parsers and RST/notebook documentation support
-2. Import/call graph signals and hybrid lexical-semantic retrieval
-3. Content-hash caching and incremental indexing with real progress reporting
-4. Project deletion, multi-project search, and storage management
-5. Hardware-aware model selection, Docker packaging, and a desktop-friendly release
+- Yalnızca `.py`, `.md` ve `.mdx` dosyaları desteklenir.
+- Python kodu statik olarak analiz edilir; çalışma zamanı davranışları ve dinamik yönlendirmeler çözümlenmez.
+- 512 KB'tan büyük kaynak dosyaları varsayılan olarak atlanır.
+- SQLite vektörleri NumPy ile bellekte taranır; sistem büyük monorepo'lar için optimize edilmemiştir.
+- CPU üzerinde birkaç yüz parçanın indekslenmesi birkaç dakika sürebilir.
+- Sohbet modelinin ifadesi her zaman kusursuz olmayabilir; cevapların kaynak kartlarıyla doğrulanması gerekir.
+- Yeniden indeksleme bütün parça ve embedding'leri yeniden üretir; henüz artımlı indeksleme yoktur.
+- Proje silme, kimlik doğrulama, projeler arası arama ve masaüstü/Docker paketi bulunmaz.
 
-## More documentation
+## Yol haritası
 
-- [Evaluation and benchmark report](docs/evaluation.md)
-- [Five-minute demo script](docs/demo.md)
-- [Implementation context and roadmap baseline](docs/RepoLens_Copilot_Context.md)
+- [ ] Yeni programlama dili ayrıştırıcıları
+- [ ] RST ve notebook desteği
+- [ ] Import ve çağrı grafiği sinyalleri
+- [ ] Hibrit sözcüksel/anlamsal arama
+- [ ] İçerik özeti önbelleği ve artımlı indeksleme
+- [ ] Gerçek zamanlı indeksleme ilerlemesi
+- [ ] Proje silme ve depolama yönetimi
+- [ ] Donanıma göre model seçimi
+- [ ] Docker veya masaüstü paketi
+
+## Ek belgeler
+
+- [Değerlendirme ve performans raporu](docs/evaluation.md)
+- [Beş dakikalık demo akışı](docs/demo.md)
+- [Uygulama bağlamı ve geliştirme yol haritası](docs/RepoLens_Copilot_Context.md)
