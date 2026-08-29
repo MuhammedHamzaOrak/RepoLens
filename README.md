@@ -311,5 +311,4 @@ Sonuçlar test edilen CPU ve Foundry sağlayıcısına aittir; farklı donanım 
 ## Ek belgeler
 
 - [Değerlendirme ve performans raporu](docs/evaluation.md)
-- [Beş dakikalık demo akışı](docs/demo.md)
 - [Uygulama bağlamı ve geliştirme yol haritası](docs/RepoLens_Copilot_Context.md)
